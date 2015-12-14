@@ -1,0 +1,205 @@
+// The "Crytpo" class.
+//Author: Jacky Xao
+//Date: October 14 2014
+//Purpose: Encrypts and decrypts text file using vigenere's method
+import java.awt.*;
+import hsa.Console;
+import hsa.*;
+
+public class Crytpo
+{
+    static Console c;           // The output console
+    
+    public static void main (String[] args)
+    {
+	c = new Console ();
+
+	boolean again = true;
+	while (again)
+	    {
+	    String yn;
+	    String key;
+	    String input;
+	    String encry1;
+	    String encry2;
+	    String output;
+	    Vigenere text;
+	    
+	    c.println("Encryption");
+	    c.println("Please enter the input file (.txt): ");
+	    input = c.readLine();
+	    
+	    c.println("Please enter the encryption key: ");
+	    key = c.readLine();
+	    while (key.length() == 0)
+		{
+		c.println("Key must be atleast one character: ");
+		key = c.readLine();
+		}
+	    
+	    text = new Vigenere(key);
+	    encry1 = text.encrypt(input);
+	    
+	    c.println("The file has been encrypted and saved to " + encry1);
+	    
+	    c.println("\nDecryption");
+	    c.println("Please enter the encrypted file (.cyp): ");
+	    encry2 = c.readLine();
+	    
+	    c.println("Please enter the encryption key: ");
+	    key = c.readLine();
+	    while (key.length() == 0)
+		{
+		c.println("Key must be atleast one character: ");
+		key = c.readLine();
+		}
+	    
+	    text = new Vigenere(key);
+	    output = text.decrypt(encry2);
+	    
+	    c.println("The file has been decrypted and saved to " + output);
+	    
+	    c.print("Do you want to encrypt another text? 'y' for yes, 'n' for no: ");
+	    yn = c.readLine();
+	    while ((! yn.equalsIgnoreCase("y")) && (! yn.equalsIgnoreCase("n")))
+		{
+		c.print("y and n only: ");
+		yn = c.readLine();
+		}
+	    if (yn.equalsIgnoreCase("n"))
+		{
+		again = false;
+		c.println("Good bye");
+		}
+	    else
+		c.clear();
+	    }
+	    
+	// Place your program here.  'c' is the output console
+    } // main method
+} // Crytpo class
+/*
+-----Class Vigenere-----
+Author: Jacky Xao
+Date: October 14 2014
+Purpose: Encrypts and decrypts text file using vigenere's method
+---Fields---
+    key: the key used to determine the offset
+---Methods---
+    constructor
+    encrypt: reads a .txt file, encrypts it, and save it to a .cyp file
+    encryptLine: encrypts the text
+    decrypt: reads a .cyp file, decrypts it, and save it to a .pln file
+    decryptLine: decrypts the text
+*/
+class Vigenere
+    {
+    protected String key;
+    
+    public Vigenere(String keycode)
+	{
+	this.key = keycode;
+	}
+	
+    public String encrypt(String input) 
+    /*Author: Jacky Xao
+      Date: October 14 2014
+      Purpose: reads a .txt file, encrypts it, and save it to a .cyp file
+      Input: input: .txt filename
+      Output: the .cyp filename */
+	{//input = .txt filename
+	String output; //.cyp filename
+	String inputText = ""; //main plain text
+	String outputText = ""; //encrypted text
+	TextInputFile inputFile; //.txt input file
+	TextOutputFile outputFile; //.cyp output file
+	
+	if (input.indexOf(".txt") == -1)
+	    input = input + ".txt";
+	
+	inputFile = new TextInputFile(input);
+	while (!inputFile.eof())
+	    outputText = outputText + this.encryptLine(inputFile.readLine())+"\n";
+	inputFile.close();
+	
+	output = input.substring(0,input.indexOf(".")) + ".cyp";
+	outputFile = new TextOutputFile(output);
+	outputFile.print(outputText);
+	outputFile.close();
+	
+	return output;
+	}
+	
+    public String encryptLine(String input)
+    /*Author: Jacky Xao
+      Date: October 14 2014
+      Purpose: encrypts the text
+      Input: input: the original text
+      Output: the encrypted text*/
+	{
+	String encry = "";
+	int offset;
+	int result;
+	
+	for (int count = 0; count < input.length(); count++)
+	    {
+	    offset = (int) this.key.charAt(count % this.key.length()) - 32;
+	    result = (int) input.charAt(count) + offset;
+	    if (result > 126)
+		result = result - 126 + 31;
+	    encry = encry + (char) result;
+	    }
+	return encry;
+	}
+    
+    public String decrypt(String input) 
+    /*Author: Jacky Xao
+      Date: October 14 2014
+      Purpose: reads a .cyp file, decrypts it, and save it to a .pln file
+      Input: input: .cyp filename
+      Output: .pln filename */
+	{//input = .cyp filename
+	String output; //.pln filename
+	String inputText = ""; //encrypted text
+	String outputText = ""; //plain text
+	TextInputFile inputFile; //.cyp input file
+	TextOutputFile outputFile; //.pln output file
+	
+	if (input.indexOf(".cyp") == -1)
+	    input = input + ".cyp";
+  
+	inputFile = new TextInputFile(input);
+	while (!inputFile.eof()) 
+	    outputText = outputText + this.decryptLine(inputFile.readLine())+"\n";
+	inputFile.close();
+	
+	output = input.substring(0,input.indexOf(".")) + ".pln";
+	outputFile = new TextOutputFile(output);
+	outputFile.print(outputText);
+	outputFile.close();
+	
+	return output;
+	}
+	
+    public String decryptLine(String encry)
+    /*Author: Jacky Xao
+      Date: October 14 2014
+      Purpose: decrypts the text
+      Input: encry: the encrypted text
+      Output: the decrypted text */
+	{
+	String text = "";
+	int offset;
+	int letter;
+	
+	for (int count = 0; count < encry.length(); count++)
+	    {
+	    offset = (int) this.key.charAt(count % this.key.length()) - 32;
+	    letter = (int) encry.charAt(count) - offset;
+	    if (letter < 32)
+		letter = letter + 126 - 31;
+	    text = text + (char) letter;
+	    }
+	return text;
+	}
+    }
